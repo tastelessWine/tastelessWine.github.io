@@ -1,1 +1,340 @@
-re
+<!DOCTYPE html
+<head>
+<title>GJ Brouwer Homepage</title>
+
+
+<script type="text/javascript">
+//Global Variables
+	var cVertices = 1;
+	var increment = 2;
+		
+	window.onload = startDemo;
+	function Point3D(x,y,z) 
+		{
+        this.x = x;
+        this.y = y;
+        this.z = z;
+ 
+		//Rotate X
+        this.rotateX = function(angle) 
+			{
+            var rad, cosa, sina, y, z;
+            rad = angle * Math.PI / 180;
+            cosa = Math.cos(rad);
+            sina = Math.sin(rad);
+            y = this.y * cosa - this.z * sina;
+            z = this.y * sina + this.z * cosa;
+            return new Point3D(this.x, y, z)
+            }
+ 
+		//Rotate Y
+        this.rotateY = function(angle) 
+			{
+            var rad, cosa, sina, x, z;
+            rad = angle * Math.PI / 180;
+            cosa = Math.cos(rad);
+            sina = Math.sin(rad);
+            z = this.z * cosa - this.x * sina;
+            x = this.z * sina + this.x * cosa;
+            return new Point3D(x,this.y, z)
+            }
+ 
+        //Rotate Z 
+		this.rotateZ = function(angle) 
+			{
+            var rad, cosa, sina, x, y
+            rad = angle * Math.PI / 180
+            cosa = Math.cos(rad)
+            sina = Math.sin(rad)
+            x = this.x * cosa - this.y * sina
+            y = this.x * sina + this.y * cosa
+            return new Point3D(x, y, this.z)
+            }
+ 
+        this.project = function(viewWidth, viewHeight, fov, viewDistance) 
+			{
+	        var factor, x, y;
+            factor = fov / (viewDistance + this.z);
+            x = this.x * factor + viewWidth / 2;
+            y = this.y * factor + viewHeight / 2;
+            return new Point3D(x, y, this.z)
+            }
+		}
+ 
+		//Vertices
+        var vertices = [
+            new Point3D(-1,1,-1),
+            new Point3D(1,1,-1),
+            new Point3D(1,-1,-1),
+            new Point3D(-1,-1,-1),
+            new Point3D(-1,1,1),
+            new Point3D(1,1,1),
+            new Point3D(1,-1,1),
+            new Point3D(-1,-1,1)
+	        ];
+ 
+		//Faces and colors
+        var faces  = [[0,1,2,3],[1,5,6,2],[5,4,7,6],[4,0,3,7],[0,4,5,1],[3,2,6,7]];
+        var colors = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+        var angle = 0;
+ 
+        //Constructs a CSS RGB value from an array of 3 elements. 
+        function arrayToRGB(arr) {
+            if( arr.length == 3 ) {
+                return "rgb(" + arr[0] + "," + arr[1] + "," + arr[2] + ")";
+            }
+            return "rgb(0,0,0)";
+        }
+ 
+		//Start Demo
+        function startDemo() {
+            canvas = document.getElementById("thecanvas");
+            if( canvas && canvas.getContext ) {
+                ctx = canvas.getContext("2d");
+                setInterval(loop,33);
+            }
+        }
+ 
+		//Loop
+        function loop() {
+            var t = new Array();
+ 
+            ctx.fillStyle = "rgb(255,255,255)";
+            ctx.fillRect(0,0,600,500);
+ 
+            for( var i = 0; i < vertices.length; i++ ) {
+                var v = vertices[i];
+                var r = v.rotateX(angle).rotateY(angle);
+                var p = r.project(600,500,400,4);
+                t.push(p)
+            }
+ 
+            var avg_z = new Array();
+ 
+            for( var i = 0; i < faces.length; i++ ) {
+                var f = faces[i];
+                avg_z[i] = {"index":i, "z":(t[f[0]].z + t[f[1]].z + t[f[2]].z + t[f[3]].z) / 4.0};
+            }
+ 
+            avg_z.sort(function(a,b) {
+                return b.z - a.z;
+            });
+ 
+			ctx.strokeStyle = "rgb(0,0,0)"
+            for( var i = 0; i < faces.length; i++ ) {
+                var f = faces[avg_z[i].index]
+ 
+                ctx.beginPath()
+                ctx.moveTo(t[f[0]].x,t[f[0]].y)
+                ctx.lineTo(t[f[1]].x,t[f[1]].y)
+                ctx.lineTo(t[f[2]].x,t[f[2]].y)
+                ctx.lineTo(t[f[3]].x,t[f[3]].y)
+                ctx.closePath()
+                ctx.stroke()
+            }
+            angle += increment;
+
+
+	//On Mouse Down
+    canvas.addEventListener('mousedown', function(evt) 
+		{	
+		increment = 0;  
+		}, false);
+			
+	//On Mouse Up			
+	canvas.addEventListener('mouseup', function(evt) 
+		{	  
+		increment = 2;
+		}, false);
+
+	//On Mouse Move
+    canvas.addEventListener('mousemove', function(evt) 
+		{	  
+		}, false);
+    
+	}
+
+function MM_preloadImages() { //v3.0
+  var d=document; if(d.images){ if(!d.MM_p) d.MM_p=new Array();
+    var i,j=d.MM_p.length,a=MM_preloadImages.arguments; for(i=0; i<a.length; i++)
+    if (a[i].indexOf("#")!=0){ d.MM_p[j]=new Image; d.MM_p[j++].src=a[i];}}
+}
+function MM_swapImgRestore() { //v3.0
+  var i,x,a=document.MM_sr; for(i=0;a&&i<a.length&&(x=a[i])&&x.oSrc;i++) x.src=x.oSrc;
+}
+function MM_findObj(n, d) { //v4.01
+  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
+    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
+  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
+  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
+  if(!x && d.getElementById) x=d.getElementById(n); return x;
+}
+
+function MM_swapImage() { //v3.0
+  var i,j=0,x,a=MM_swapImage.arguments; document.MM_sr=new Array; for(i=0;i<(a.length-2);i+=3)
+   if ((x=MM_findObj(a[i]))!=null){document.MM_sr[j++]=x; if(!x.oSrc) x.oSrc=x.src; x.src=a[i+2];}
+}
+</script>
+
+
+
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Untitled Document</title>
+<style type="text/css">
+<!--
+body {
+	background: #FFF;
+	margin: 0;
+	padding: 0;
+	color: #000;
+	font-family: "Helvetica Neue Light";
+	font-size: 100%;
+	line-height: 1.4;
+}
+ul, ol, dl { 
+	padding: 0;
+	margin: 0;
+}
+h1, h2, h3, h4, h5, h6, p {
+	margin-top: 0;	
+	padding-right: 0px;
+	padding-left: 15px;
+}
+a img {
+	border: none;
+}
+a:link {
+	color:#414958;
+	text-decoration: underline; 
+}
+a:visited {
+	color: #4E5869;
+	text-decoration: underline;
+}
+a:hover, a:active, a:focus { 
+	text-decoration: none;
+}
+.container {
+	width: 100%;
+	max-width: 2260px;
+	min-width: 780px;
+	background: #FFF;
+	margin: 0 auto; 
+}
+.header {
+	background: #FFF;
+}
+.sidebar1 {
+	float: left;
+	width: 25%;
+	background: #FFF;
+	padding-bottom: 10px;
+}
+.content {
+	background: #FFF;
+	padding: 0px 0;
+	width: 75%;
+	float: left;
+}
+.content ul, .content ol { 
+	padding: 0 15px 15px 0px; 
+}
+ul.nav {
+	list-style: none; 
+	border-top: 1px solid #666; 
+	margin-bottom: 15px; 
+}
+ul.nav li {
+	border-bottom: 1px solid #666; 
+}
+ul.nav a, ul.nav a:visited { 
+	padding: 5px 0px 5px 15px;
+	display: block;
+	text-decoration: none;
+	background: #FFF;
+	color: #000;
+}
+ul.nav a:hover, ul.nav a:active, ul.nav a:focus { 
+	background: #FFF;
+	color: #000;
+}
+.footer {
+	padding: 0px 0;
+	background: #FFF;
+	position: relative;
+	clear: both; 
+}
+.fltrt {  
+	float: right;
+	margin-left: 8px;
+}
+.fltlft { 
+	float: left;
+	margin-right: 8px;
+}
+.clearfloat { 
+	clear:both;
+	height:0;
+	font-size: 1px;
+	line-height: 0px;
+}
+-->
+</style><!--[if lte IE 7]>
+<style>
+.content { margin-right: -1px; } /* this 1px negative margin can be placed on any of the columns in this layout with the same corrective effect. */
+ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it needs to correct extra whiltespace between the links */
+</style>
+<![endif]--></head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<body>
+
+<div class="container">
+<div class="header">
+  
+<p>
+      
+     
+     <!-- end .header --></p>
+    <p>&nbsp;</p>
+  </div>
+  <div class="sidebar1">
+  
+    <p><a href="index.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Home','','Art/home_over.png',1)"><img src="Art/home.png" name="Home" width="350" height="86" border="0"></a></p>
+    <p><a href="research.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Research','','Art/research_over.png',1)"><img src="Art/data_science.png" name="Research" width="350" height="86" border="0"></a></p>
+    <p><a href="publications.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Publications','','Art/publications_over.png',1)"><img src="Art/publications.png" name="Publications" width="350" height="86" border="0"></a></p>
+    <p><a href="gallery.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Photos','','Art/photos_over.png',1)"><img src="Art/photos.png" name="Photos" width="350" height="86" border="0"></a></p>
+    <p><a href="introduction_manhatan.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Manhattan','','Art/manhattan_over.png',1)"><img src="Art/manhattan.png" name="Manhattan" width="350" height="86" border="0"></a></p>
+    <p><a href="introduction_color.html" onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Color','','Art/color_over.png',1)"><img src="Art/color.png" name="Color" width="350" height="86" border="0"></a></p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+
+
+   
+  <!-- end .sidebar1 --></div>
+  <div class="content">
+  <canvas id="thecanvas" width="600" height="600" align="center"></canvas>
+  <!-- end .content --></div>
+  <div class="footer">
+    <p>&nbsp;</p>
+  <!-- end .footer --></div>
+<!-- end .container --></div>
+  
+
+  
+</body>
+</html>
